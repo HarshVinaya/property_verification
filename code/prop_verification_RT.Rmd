@@ -1,0 +1,180 @@
+---
+title: "property_verification_RT"
+author: "Harshada Vinaya"
+date: "2024-11-18"
+output: html_document:
+  number_sections: true
+---
+
+# Loading the libraries 
+library (lme4)
+library(sjPlot)
+library(lmerTest)
+library(car)
+library(tidyverse)
+library(knitr)
+
+# Importing data and removing outlier RTs
+data <- read_csv("../data/pv_RT")
+data <- data[data$response_time < 2600, ]
+
+# Ensure the correct file
+colnames(data)
+data
+
+data
+# Check if TRUE FALSE RTs are significanty different from one another
+data$veracity <- as.factor(data$veracity)
+
+model_RT <- lmer(response_time ~ (veracity) 
+                 + (1 | subject)
+                 + (1 | property), 
+                 data, REML = FALSE)
+
+summary(model_RT)
+
+summary_stats <- data %>%
+  group_by(veracity) %>%
+  summarise(
+    Mean = round(mean(response_time, na.rm = TRUE), 2),
+    SD = round(sd(response_time, na.rm = TRUE), 2)
+  )
+
+# Display the results
+print(summary_stats)
+
+
+# Z-scoring all of the predictors for the entire dataset
+data$word_freq_zscore <- scale(data$prop_Lg10WF)
+data$glove_zscore <- scale(data$glove_distance)
+data$smn_zscore <- scale(data$sensorimotor_distance)
+
+
+# Divide TRUE and FALSE trials
+data_PT <- data[data$veracity == TRUE, ]
+data_PF <- data[data$veracity == FALSE, ]
+
+print(nrow(data_PT))
+print(nrow(data_PF))
+
+
+###########################################################################
+
+# Model Fitting for TRUE properties 
+
+# Frequency model
+
+f_pt_RT <- lmer(response_time ~ (word_freq_zscore) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_PT, REML = FALSE)
+
+# Summary of the Frequency model 
+summary(f_pt_RT)
+
+#Distributional model
+
+d_pt_RT <- lmer(response_time ~ (word_freq_zscore + glove_zscore)
+                + (1 | subject) 
+                + (1 | property), 
+                data_PT, REML = FALSE)
+
+# Summary of the Distributional model
+summary(d_pt_RT)
+
+
+# Sensorimotor model
+
+s_pt_RT <- lmer(response_time ~ (word_freq_zscore + smn_zscore) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_PT, REML = FALSE)
+
+# Summary of the Sensorimotor model
+summary(s_pt_RT)
+
+# Distributional and Sensorimotor (combined) model
+
+ds_pt_RT <- lmer(response_time ~ (word_freq_zscore + 
+                              glove_zscore + 
+                              smn_zscore)
+                 + (1 | subject) 
+                 + (1 | property), 
+                 data_PT, REML = FALSE)
+
+# Summary of the combined model
+summary(ds_pt_RT)
+
+
+###############################################################
+
+# Saving TRUE property AIC results
+
+x_pt <- c('f PT AIC', 'd PT AIC', 's PT AIC','ds PT AIC')
+y_pt <- c(AIC(f_pt_RT), AIC(d_pt_RT), AIC(s_pt_RT), AIC(ds_pt_RT))
+aic_pt <- data.frame(x_pt, y_pt)
+write.csv(aic_pt, "aic_pt_RT")
+
+
+# Model Fitting for FALSE properties
+
+# Frequency model
+
+f_pf_RT <- lmer(response_time ~ (word_freq_zscore) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_PF, REML = FALSE)
+
+# Summary of F model
+summary(f_pf_RT)
+
+
+# Distribution model
+
+d_pf_RT <- lmer(response_time ~ (word_freq_zscore+ glove_zscore)
+                + (1 | subject) 
+                + (1 | property), 
+                data_PF, REML = FALSE)
+
+# Summary of D model
+summary(d_pf_RT)
+
+
+# Sensorimotor model
+
+s_pf_RT <- lmer(response_time ~ (word_freq_zscore + smn_zscore) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_PF, REML = FALSE)
+
+# Summary of S model
+summary(s_pf_RT)
+
+
+# Combined model
+
+ds_pf_RT <- lmer(response_time ~ (word_freq_zscore +
+                              glove_zscore + 
+                              smn_zscore)
+                 + (1 | subject) 
+                 + (1 | property), 
+                 data_PF, REML = FALSE)
+
+# Summary of DS model
+summary(ds_pf_RT)
+
+# Saving FALSE property AIC results
+x_pf <- c('f PF AIC', 'd PF AIC', 's PF AIC','ds PF AIC')
+y_pf <- c(AIC(f_pf_RT), AIC(d_pf_RT), AIC(s_pf_RT), AIC(ds_pf_RT))
+aic_pf <- data.frame(x_pf, y_pf)
+write.csv(aic_pf, "aic_pf_RT")
+
+
+# Saving model outputs in pdfs
+tab_model(f_pt_RT, d_pt_RT, s_pt_RT, ds_pt_RT)  
+tab_model(f_pf_RT, d_pf_RT, s_pf_RT, ds_pf_RT)  
+
+# session information 
+sessionInfo()
+
+This Markdown file includes response times data import, processing, model fitting, and results for both TRUE and FALSE Property trials.

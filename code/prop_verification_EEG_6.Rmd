@@ -1,0 +1,150 @@
+---
+title: "property_verification_EEG_6"
+author: "Harshada Vinaya"
+date: "2024-11-18"
+output: html_document
+---
+
+# Loading the libraries 
+library (lme4)
+library(sjPlot)
+library(lmerTest)
+library(car)
+library(tidyverse)
+
+# Import 100 ms averaged single trial EEG data for all property trials
+data_500_600 <- read_csv("../data/prop_ms_500_600.csv")
+
+# Ensure the correct file
+colnames(data_500_600)
+
+# Z-scoring all of the predictors for the entire dataset
+data_500_600$word_freq_zscore <- scale(data_500_600$prop_Lg10WF)
+data_500_600$glove_zscore <- scale(data_500_600$glove_distance)
+data_500_600$smn_zscore <- scale(data_500_600$sensorimotor_distance)
+
+
+# Checking
+range(data_500_600$word_freq_zscore)
+range(data_500_600$glove_zscore)
+range(data_500_600$smn_zscore)
+
+# Divide TRUE and FALSE trials
+data_500_600_PT <- data_500_600[data_500_600$veracity == TRUE, ]
+data_500_600_PF <- data_500_600[data_500_600$veracity == FALSE, ]
+
+print(nrow(data_500_600_PT))
+print(nrow(data_500_600_PF))
+
+###########################################################################
+
+# Model Fitting for TRUE properties #
+
+# Frequency model
+
+f_pt_60 <- lmer(voltage ~ (word_freq_zscore)*(X + Y + Z) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_500_600_PT, REML = FALSE)
+
+# Summary of the Frequency model 
+summary(f_pt_60)
+
+#Distributional model
+
+d_pt_60 <- lmer(voltage ~ (word_freq_zscore + glove_zscore)*(X + Y + Z) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_500_600_PT, REML = FALSE)
+
+# Summary of the Distributional model
+summary(d_pt_60)
+
+
+# Sensorimotor model
+
+s_pt_60 <- lmer(voltage ~ (word_freq_zscore + smn_zscore)*(X + Y + Z) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_500_600_PT, REML = FALSE)
+
+# Summary of the Sensorimotor model
+summary(s_pt_60)
+
+# Distributional and Sensorimotor (combined) model
+
+ds_pt_60 <- lmer(voltage ~ (word_freq_zscore + 
+                              glove_zscore + 
+                              smn_zscore)*(X + Y + Z) 
+                 + (1 | subject) 
+                 + (1 | property), 
+                 data_500_600_PT, REML = FALSE)
+
+# Summary of the combined model
+summary(ds_pt_60)
+
+
+###############################################################
+
+# Saving TRUE property AIC results
+
+x_pt_60 <- c('f PT AIC', 'd PT AIC', 's PT AIC','ds PT AIC')
+y_pt_60 <- c(AIC(f_pt_60), AIC(d_pt_60), AIC(s_pt_60), AIC(ds_pt_60))
+aic_pt_60 <- data.frame(x_pt_60, y_pt_60)
+write.csv(aic_pt_60, "aic_pt_60")
+
+############################################################################
+
+# Model Fitting for FALSE properties
+
+# Frequency model
+
+f_pf_60 <- lmer(voltage ~ (word_freq_zscore)*(X + Y + Z) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_500_600_PF, REML = FALSE)
+
+# Summary of F model
+summary(f_pf_60)
+
+
+# Distribution model
+
+d_pf_60 <- lmer(voltage ~ (word_freq_zscore+ glove_zscore)*(X + Y + Z) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_500_600_PF, REML = FALSE)
+
+# Summary of D model
+summary(d_pf_60)
+
+
+# Sensorimotor model
+
+s_pf_60 <- lmer(voltage ~ (word_freq_zscore + smn_zscore)*(X + Y + Z) 
+                + (1 | subject) 
+                + (1 | property), 
+                data_500_600_PF, REML = FALSE)
+
+# Summary of S model
+summary(s_pf_60)
+
+
+# Combined model
+
+ds_pf_60 <- lmer(voltage ~ (word_freq_zscore +
+                              glove_zscore + 
+                              smn_zscore)*(X + Y + Z) 
+                 + (1 | subject) 
+                 + (1 | property), 
+                 data_500_600_PF, REML = FALSE)
+
+# Summary of DS model
+summary(ds_pf_60)
+
+# Saving FALSE property AIC results
+
+x_pf_60 <- c('f PF AIC', 'd PF AIC', 's PF AIC','ds PF AIC')
+y_pf_60 <- c(AIC(f_pf_60), AIC(d_pf_60), AIC(s_pf_60), AIC(ds_pf_60))
+aic_pf_60 <- data.frame(x_pf_60, y_pf_60)
+write.csv(aic_pf_60, "aic_pf_60")
