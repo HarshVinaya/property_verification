@@ -1,0 +1,26 @@
+---
+title: "property_verification_n400"
+author: "Harshada Vinaya"
+date: "2024-11-18"
+output: html_document
+---
+
+# Loading the libraries 
+library (lme4)
+library(sjPlot)
+library(lmerTest)
+library(car)
+library(tidyverse)
+
+data_N400 <- read_csv("~/ms2/data/pv_n400.csv")
+
+data_N400 <- data_N400 %>% select(-all_of(columns_to_drop))
+data_N400$veracity <- factor(data_N400$veracity)
+data_N400$veracity <- relevel(data_N400$veracity, 
+                               ref = "TRUE")
+
+n400_model <- lmer(voltage ~ (veracity)
+                + (1 | subject), 
+                data_N400, REML = FALSE)
+
+summary(n400_model)
