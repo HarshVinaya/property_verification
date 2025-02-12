@@ -20,9 +20,9 @@ colnames(data_m100_0)
 
 # Z-scoring all of the predictors for the entire dataset
 
-data_m100_0$word_freq_zscore <- scale(data_0_100$prop_Lg10WF)
-data_m100_0$glove_zscore <- scale(data_0_100$glove_distance)
-data_m100_0$smn_zscore <- scale(data_0_100$sensorimotor_distance)
+data_m100_0$word_freq_zscore <- scale(data_m100_0$prop_Lg10WF)
+data_m100_0$glove_zscore <- scale(data_m100_0$glove_distance)
+data_m100_0$smn_zscore <- scale(data_m100_0$sensorimotor_distance)
 
 
 # Checking
