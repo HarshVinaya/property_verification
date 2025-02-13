@@ -14,7 +14,6 @@ library(tidyverse)
 
 data_N400 <- read_csv("~/ms2/data/pv_n400.csv")
 
-data_N400 <- data_N400 %>% select(-all_of(columns_to_drop))
 data_N400$veracity <- factor(data_N400$veracity)
 data_N400$veracity <- relevel(data_N400$veracity, 
                                ref = "TRUE")
